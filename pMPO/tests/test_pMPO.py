@@ -772,6 +772,16 @@ class test_suite002_behavior(unittest.TestCase):
         self.assertEqual(str(self.model), str(unserialized_model))
 
     def test006_null_dataframe(self):
+        """
+        Try building a pMPO with an empty DataFrame
+        """
         df = pd.DataFrame()
         with self.assertRaises(AssertionError):
             pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO')
+
+    def test007_invalid_column(self):
+        """
+        Try building a pMPO with an invalid column
+        """
+        with self.assertRaises(AssertionError):
+            pMPOBuilder(self.df, good_column='I DO NOT EXIST', model_name='CNS pMPO')

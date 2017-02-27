@@ -306,6 +306,9 @@ class pMPOBuilder:
         # Make sure we at least have some data
         if not self.df.size:
             raise AssertionError("Input pMPO DataFrame has no data")
+        # Make sure the good_column exists
+        if not good_column in self.df.columns:
+            raise AssertionError("{} does not exist in input pMPO DataFrame")
         self.min_samples = min_samples
         self.p_cutoff = p_cutoff
         self.q_cutoff = q_cutoff
@@ -319,10 +322,6 @@ class pMPOBuilder:
         else:
             self.good_column = pMPO_good_column_name
         # Create the evaluator that evaluates whether an individual value in the input good_column is True
-        # if good_value == 'default':
-        #     good_value_evaluator = lambda row: row[self.good_column] in DEFAULT_TRUTHS
-        # else:
-        #     good_value_evaluator = lambda x: str(row[go]) == good_value
         good_value_evaluator = build_evaluator(good_value)
         # Apply the evaluator to the input good_column and store it in the renamed self.good_column
         self.df[self.good_column] = np.vectorize(good_value_evaluator)(self.df[good_column])
