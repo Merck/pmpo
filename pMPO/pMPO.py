@@ -303,6 +303,9 @@ class pMPOBuilder:
         # | Set up the input Pandas DataFrame |
         # -------------------------------------
         self.df = df
+        # Make sure we at least have some data
+        if not self.df.size:
+            raise AssertionError("Input pMPO DataFrame has no data")
         self.min_samples = min_samples
         self.p_cutoff = p_cutoff
         self.q_cutoff = q_cutoff

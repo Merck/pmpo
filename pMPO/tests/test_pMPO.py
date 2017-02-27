@@ -738,7 +738,7 @@ class test_suite002_behavior(unittest.TestCase):
         self.builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO')
         self.model = self.builder.get_pMPO()
 
-    def test_003_intermediate_statistics(self):
+    def test003_intermediate_statistics(self):
         """
         Check all the intermediate statistics are OK
         """
@@ -754,7 +754,7 @@ class test_suite002_behavior(unittest.TestCase):
                                         "{} does not match reference within 0.01 tolerance {} != {}".format(
                                             attribute_name, attribute_value, val))
 
-    def test_004_prediction(self):
+    def test004_prediction(self):
         for row in self.df.iterrows():
             row_data = row[1].to_dict()
             name = row_data.pop('Drug')
@@ -765,8 +765,13 @@ class test_suite002_behavior(unittest.TestCase):
                             "{} does not score within 0.025 tolerance of reference value {} != {}".format(
                                 name, score, REFERENCE_CNS_PMPO_VALUES[name]))
 
-    def test_005_pickle(self):
+    def test005_pickle(self):
         serialized_model = pickle.dumps(self.model)
         self.assertIsNotNone(serialized_model)
         unserialized_model = pickle.loads(serialized_model)
         self.assertEqual(str(self.model), str(unserialized_model))
+
+    def test006_null_dataframe(self):
+        df = pd.DataFrame()
+        with self.assertRaises(AssertionError):
+            pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO')
