@@ -12,7 +12,7 @@ and removal of linearly correlated descriptors.
 
 Scott Arne Johnson <scott.johnson6@merck.com>
 
-From the original source code used in the paper by Hakan Gunaydin.
+Rewritten and tested against the original source code used in the paper by Hakan Gunaydin.
 
 ## Usage
 
