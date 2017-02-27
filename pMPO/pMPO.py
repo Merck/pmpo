@@ -204,24 +204,55 @@ class pMPOFunction:
 
 
 class pMPOModel:
-
-    def __init__(self, name):
+    """
+    A pMPO model that returns a sum over all the component functions
+    """
+    def __init__(self, name, case_insensitive=True):
+        """
+        Create an empty pMPO model
+        :param name: The name of the model
+        :param case_insensitive: Whether the function lookups will be case insensitive
+        """
         self.name = name
+        self.case_insensitive = case_insensitive
         self.functions = {}
 
-    def __call__(self, **kwargs):
-        return sum(self.functions[key](val) if (key in self.functions and not np.isnan(val)) else 0.0
-                   for key, val in kwargs.items())
+    def __call__(self, **kwargs) -> float:
+        """
+        Apply a pMPO model
+        Missing model components get a score of 0.0
+        Irrelevant descriptor values input to this function are just ignored
+        :param kwargs: The descriptor values to score against the model
+        :return: The pMPO score
+        """
+        score = 0.0
+        for key, val in kwargs.items():
+            _key = key.upper() if self.case_insensitive else key
+            if _key in self.functions and not np.isnan(val):
+                score += self.functions[_key](val)
+        return score
 
     def register(self, name: str, fn: pMPOFunction):
-        self.functions[name] = fn
+        """
+        Register a function with this model
+        :param name: The name of the function
+        :param fn: A pMPOFunction that takes a single value and returns a score
+        """
+        self.functions[name.upper() if self.case_insensitive else name] = fn
 
     def __str__(self):
+        """
+        Stringify the model by creating an equation that represents the pMPO
+        :return: The string representation of the model
+        """
         submodels = sorted(["[{}] {}".format(name, str(fn)) for name, fn in self.functions.items()])
         return "{}: {}".format(self.name, " + ".join(submodels))
 
 
 class SigmoidalFunction(pMPOFunction):
+    """
+    A sigmoidal pMPO function
+    """
     def __init__(self, **kwargs):
         if 'mean' not in kwargs:
             raise KeyError(" mean not provided to sigmoidal pMPO function: {}".format(kwargs))
