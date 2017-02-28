@@ -33,13 +33,15 @@ df = pd.read_pickle('pMPO/tests/assets/CNS_MPO.df.pkl')
 ```
 
 Once you've created your Pandas DataFrame with your molecule data. You can use the ``pMPOBuilder`` class to create your 
-model.
+model. The score for each descriptor in a pMPO is a weighted Gaussian function multipled by a sigmoidal function term 
+that further biases against bad compounds. The published CNS pMPO did not include that additional bias. It is controlled
+by the additional parameter ```sigmoidal_correction```, which is ```True``` by default.
 
 ```python
-builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO')
+builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=False)
 ```
 
-That's it! You've actually created your pMPO. We can get a usable model from the following:
+That's it! You've re-created the CNS pMPO. We can get a usable model from the following:
 
 ```python
 model = builder.get_pMPO()
@@ -48,10 +50,28 @@ model = builder.get_pMPO()
 We can inspect the model by just printing it as a string ```print(model)```
 
 ```text
-CNS pMPO: [MW] 0.16 * np.exp(-1.0 * (x - 304.70)^2 / (2.0 * (94.05)^2)) + [HBD] 0.27 * 
-np.exp(-1.0 * (x - 1.09)^2 / (2.0 * (0.89)^2)) + [mbpKa] 0.12 * np.exp(-1.0 * (x - 8.07)^2 / (2.0 * (2.21)^2)) + 
-[TPSA] 0.33 * np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2)) + [cLogD_ACD_v15] 0.13 * 
-np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2))
+CNS pMPO: [CLOGD_ACD_V15] 0.13 * np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2)) + [HBD] 0.27 * np.exp(-1.0 * 
+(x - 1.09)^2 / (2.0 * (0.89)^2)) + [MBPKA] 0.12 * np.exp(-1.0 * (x - 8.07)^2 / (2.0 * (2.21)^2)) + [MW] 0.16 * 
+np.exp(-1.0 * (x - 304.70)^2 / (2.0 * (94.05)^2)) + [TPSA] 0.33 * np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2))
+```
+
+Note that the properties are in all caps because by default ```case_insensitive=True``` for model properties. If we 
+wanted to build the same model using the default sigmoidal correction:
+
+```python
+builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO with Correction')
+model_with_correction = builder.get_pMPO()
+```
+
+And inspecting this model shows additional terms:
+
+```text
+CNS pMPO with Correction: [CLOGD_ACD_V15] 0.13 * np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2)) * np.power(1.0 + 0.02 * 
+np.power(131996.99, -1.0 * (x - 1.81)), -1.0) + [HBD] 0.27 * np.exp(-1.0 * (x - 1.09)^2 / (2.0 * (0.89)^2)) * 
+np.power(1.0 + 0.09 * np.power(0.00, -1.0 * (x - 1.09)), -1.0) + [MBPKA] 0.12 * np.exp(-1.0 * (x - 8.07)^2 / (2.0 * 
+(2.21)^2)) * np.power(1.0 + 0.02 * np.power(1459310.78, -1.0 * (x - 8.07)), -1.0) + [MW] 0.16 * np.exp(-1.0 * 
+(x - 304.70)^2 / (2.0 * (94.05)^2)) * np.power(1.0 + 0.03 * np.power(0.83, -1.0 * (x - 304.70)), -1.0) + [TPSA] 0.33 * 
+np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2)) * np.power(1.0 + 0.15 * np.power(0.79, -1.0 * (x - 50.70)), -1.0)
 ```
 
 You can see how it has the name of the model ("CNS pMPO") followed by all the relevant data that would be expected on
