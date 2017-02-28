@@ -146,9 +146,9 @@ def calculate_descriptor_statistics(df: pd.DataFrame, good_column: str, min_samp
     column_stats['inflection'] = np.exp(-np.square((column_stats['cutoff'] - column_stats['good_mean'])) /
                                         (2 * np.square(column_stats['good_std'])))
     # Calculate the b in the sigmoidal function
-    column_stats['b'] = 1.0 / column_stats['inflection'] - 1.0
+    column_stats['b'] = np.power(column_stats['inflection'], -1.0) - 1.0
     # q-value cutoff transformation
-    n = 1.0 / q_cutoff - 1.0
+    n = np.power(q_cutoff, -1.0) - 1.0
     # Calculate the c in the sigmoidal function
     column_stats['c'] = np.power(10.0, ((np.log10(n / column_stats['b'])) /
                                         (-1.0 * (column_stats['bad_mean'] - column_stats['cutoff']))))
@@ -271,7 +271,7 @@ class SigmoidalFunction(pMPOFunction):
         return np.power(1.0 + self.b * np.power(self.c, -1.0 * (val - self.mean)), -1.0)
 
     def __str__(self):
-        return "1.0 / (1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})))".format(self.b, self.c, self.mean)
+        return "np.power(1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})), -1.0)".format(self.b, self.c, self.mean)
 
 
 class pMPOModel:
@@ -339,7 +339,7 @@ class pMPOModel:
             if self.sigmoidal_correction and name in self.sigmoidals:
                 _fn_text += " * {}".format(str(self.sigmoidals[name]))
             submodels.append(_fn_text)
-        return "{}: {}".format(self.name, " + ".join(submodels))
+        return "{}: {}".format(self.name, " + ".join(sorted(submodels)))
 
 
 class pMPOBuilder:
