@@ -55,8 +55,12 @@ CNS pMPO: [CLOGD_ACD_V15] 0.13 * np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2)) 
 np.exp(-1.0 * (x - 304.70)^2 / (2.0 * (94.05)^2)) + [TPSA] 0.33 * np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2))
 ```
 
-Note that the properties are in all caps because by default ```case_insensitive=True``` for model properties. If we 
-wanted to build the same model using the default sigmoidal correction:
+You can see how it has the name of the model ("CNS pMPO") followed by all the relevant data that would be expected on
+input to the model (e.g. "MW") and the equation for that particular piece of data.
+
+Note that the properties are in all caps because by default ```case_insensitive=True``` for model properties. 
+
+If we wanted to build the same model using the default sigmoidal correction:
 
 ```python
 builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO with Correction')
@@ -73,9 +77,6 @@ np.power(1.0 + 0.09 * np.power(0.00, -1.0 * (x - 1.09)), -1.0) + [MBPKA] 0.12 * 
 (x - 304.70)^2 / (2.0 * (94.05)^2)) * np.power(1.0 + 0.03 * np.power(0.83, -1.0 * (x - 304.70)), -1.0) + [TPSA] 0.33 * 
 np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2)) * np.power(1.0 + 0.15 * np.power(0.79, -1.0 * (x - 50.70)), -1.0)
 ```
-
-You can see how it has the name of the model ("CNS pMPO") followed by all the relevant data that would be expected on
-input to the model (e.g. "MW") and the equation for that particular piece of data.
 
 You can use your model on any dictionary of data with the expected tags. For example:
 
