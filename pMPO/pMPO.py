@@ -333,12 +333,12 @@ class pMPOModel:
         Stringify the model by creating an equation that represents the pMPO
         :return: The string representation of the model
         """
-        submodels = ""
+        submodels = []
         for name, fn in self.gaussians.items():
             _fn_text = "[{}] {}".format(name, str(fn))
             if self.sigmoidal_correction and name in self.sigmoidals:
                 _fn_text += " * {}".format(str(self.sigmoidals[name]))
-            submodels += _fn_text
+            submodels.append(_fn_text)
         return "{}: {}".format(self.name, " + ".join(submodels))
 
 
