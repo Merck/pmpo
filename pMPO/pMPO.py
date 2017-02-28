@@ -199,23 +199,104 @@ class pMPOFunction:
     """
     __metaclass__ = ABCMeta
 
+    def __call__(self, val: float) -> float:
+        raise NotImplemented("pMPOFunction {} not implemented".format(type(self)))
+
+
+class WeightedGaussianFunction(pMPOFunction):
+    """
+    A Gaussian pMPO function
+                   (x - mean)^2
+                 - ------------
+                    2.0 * std^2
+    f(x) = w* e
+    """
+    def __init__(self, **kwargs):
+        if 'mean' not in kwargs:
+            raise KeyError("mean not provided to weighted Gaussian pMPO function: {}".format(kwargs))
+        if 'weight' not in kwargs:
+            raise KeyError("weight not provided to weighted Gaussian pMPO function: {}".format(kwargs))
+        if 'std' not in kwargs:
+            raise KeyError("std not provided to weighted Gaussian pMPO function: {}".format(kwargs))
+        try:
+            self.mean = float(kwargs['mean'])
+        except ValueError:
+            raise KeyError("mean in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['mean']))
+        try:
+            self.std = float(kwargs['std'])
+        except ValueError:
+            raise KeyError("std in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['std']))
+        try:
+            self.weight = float(kwargs['weight'])
+        except ValueError:
+            raise KeyError("weight in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['weight']))
+
     def __call__(self, val):
-        raise NotImplemented("pMPOFunction {} not fully implemented".format(type(self)))
+        return self.weight * np.exp(-1.0 * np.square(val - self.mean) / (2.0 * np.square(self.std)))
+
+    def __str__(self):
+        return "{:.2f} * np.exp(-1.0 * (x - {:.2f})^2 / (2.0 * ({:.2f})^2))".format(self.weight, self.mean, self.std)
+
+
+class SigmoidalFunction(pMPOFunction):
+    """
+    A sigmoidal pMPO function
+
+                  1
+    f(x) = -----------------
+                   -1(x - mean)
+            1 + b c
+    """
+    def __init__(self, **kwargs):
+        if 'b' not in kwargs:
+            raise KeyError("b not provided to sigmoidal pMPO function: {}".format(kwargs))
+        if 'c' not in kwargs:
+            raise KeyError("c not provided to sigmoidal pMPO function: {}".format(kwargs))
+        if 'mean' not in kwargs:
+            raise KeyError("mean not provided to sigmoidal pMPO function: {}".format(kwargs))
+        try:
+            self.b = float(kwargs['b'])
+        except ValueError:
+            raise KeyError("b to sigmoidal pMPO function cannot be cast to float".format(kwargs['b']))
+        try:
+            self.c = float(kwargs['c'])
+        except ValueError:
+            raise KeyError("c to sigmoidal pMPO function cannot be cast to float".format(kwargs['c']))
+        try:
+            self.mean = float(kwargs['mean'])
+        except ValueError:
+            raise KeyError("mean to sigmoidal pMPO function cannot be cast to float".format(kwargs['mean']))
+
+    def __call__(self, val):
+        return np.power(1.0 + self.b * np.power(self.c, -1.0 * (val - self.mean)), -1.0)
+
+    def __str__(self):
+        return "1.0 / (1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})))".format(self.b, self.c, self.mean)
 
 
 class pMPOModel:
     """
     A pMPO model that returns a sum over all the component functions
     """
-    def __init__(self, name, case_insensitive=True):
+    def __init__(self, name, case_insensitive=True, sigmoidal_correction=True):
         """
         Create an empty pMPO model
         :param name: The name of the model
         :param case_insensitive: Whether the function lookups will be case insensitive
+        :param sigmoidal_correction: Use the sigmoidal correction to the weighted Gaussian scores
         """
         self.name = name
         self.case_insensitive = case_insensitive
-        self.functions = {}
+        self.sigmoidal_correction = sigmoidal_correction
+        self.gaussians = {}
+        self.sigmoidals = {}
+
+    def set_sigmoidal_correction(self, use_corr=True):
+        """
+        Set the flag to use the sigmoidal correction
+        :param use_corr: Whether to use the sigmoidal corrections
+        """
+        self.sigmoidal_correction = use_corr
 
     def __call__(self, **kwargs) -> float:
         """
@@ -228,56 +309,37 @@ class pMPOModel:
         score = 0.0
         for key, val in kwargs.items():
             _key = key.upper() if self.case_insensitive else key
-            if _key in self.functions and not np.isnan(val):
-                score += self.functions[_key](val)
+            _score = 0.0
+            if _key in self.gaussians and not np.isnan(val):
+                _score = self.gaussians[_key](val)
+                if self.sigmoidal_correction and _key in self.sigmoidals:
+                    _score *= self.sigmoidals[_key](val)
+            score += _score
         return score
 
-    def register(self, name: str, fn: pMPOFunction):
+    def register(self, name: str, gaussian: WeightedGaussianFunction, sigmoidal: SigmoidalFunction):
         """
         Register a function with this model
         :param name: The name of the function
-        :param fn: A pMPOFunction that takes a single value and returns a score
+        :param gaussian: The weighted Gaussian pMPO function
+        :param sigmoidal: The sigmoidal correction to the weighted Gaussian function
         """
-        self.functions[name.upper() if self.case_insensitive else name] = fn
+        _name = name.upper() if self.case_insensitive else name
+        self.gaussians[_name] = gaussian
+        self.sigmoidals[_name] = sigmoidal
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Stringify the model by creating an equation that represents the pMPO
         :return: The string representation of the model
         """
-        submodels = sorted(["[{}] {}".format(name, str(fn)) for name, fn in self.functions.items()])
+        submodels = ""
+        for name, fn in self.gaussians.items():
+            _fn_text = "[{}] {}".format(name, str(fn))
+            if self.sigmoidal_correction and name in self.sigmoidals:
+                _fn_text += " * {}".format(str(self.sigmoidals[name]))
+            submodels += _fn_text
         return "{}: {}".format(self.name, " + ".join(submodels))
-
-
-class SigmoidalFunction(pMPOFunction):
-    """
-    A sigmoidal pMPO function
-    """
-    def __init__(self, **kwargs):
-        if 'mean' not in kwargs:
-            raise KeyError(" mean not provided to sigmoidal pMPO function: {}".format(kwargs))
-        if 'weight' not in kwargs:
-            raise KeyError("weight not provided to sigmoidal pMPO function: {}".format(kwargs))
-        if 'std' not in kwargs:
-            raise KeyError("std not provided to sigmoidal pMPO function: {}".format(kwargs))
-        try:
-            self.mean = float(kwargs['mean'])
-        except ValueError:
-            raise KeyError("mean to sigmoidal pMPO function cannot be cast to float".format(kwargs['mean']))
-        try:
-            self.std = float(kwargs['std'])
-        except ValueError:
-            raise KeyError("std to sigmoidal pMPO function cannot be cast to float".format(kwargs['std']))
-        try:
-            self.weight = float(kwargs['weight'])
-        except ValueError:
-            raise KeyError("weight to sigmoidal pMPO function cannot be cast to float".format(kwargs['weight']))
-
-    def __call__(self, val):
-        return self.weight * np.exp(-1.0 * np.square(val - self.mean) / (2.0 * np.square(self.std)))
-
-    def __str__(self):
-        return "{:.2f} * np.exp(-1.0 * (x - {:.2f})^2 / (2.0 * ({:.2f})^2))".format(self.weight, self.mean, self.std)
 
 
 class pMPOBuilder:
@@ -286,7 +348,7 @@ class pMPOBuilder:
     """
     def __init__(self, df: pd.DataFrame, good_column: str, model_name: str, good_value='default',
                  pMPO_good_column_name: str=None, min_samples: int=10, p_cutoff: float=0.01, q_cutoff: float=0.05,
-                 r2_cutoff: float=0.53):
+                 r2_cutoff: float=0.53, sigmoidal_correction=True):
         """
         Build a pMPO model
         :param df: Input DataFrame with good molecules, bad molecules, and data
@@ -298,6 +360,7 @@ class pMPOBuilder:
         :param p_cutoff: The p-value cutoff to determine significant separation between good and bad molecules
         :param q_cutoff: The q-value cutoff used in parameterizing the sigmoidal functions
         :param r2_cutoff: The r^2 cutoff for determining linearly correlated descriptors
+        :param sigmoidal_correction: Use the sigmoidal correction to the weighted Gaussian scores
         """
         # -------------------------------------
         # | Set up the input Pandas DataFrame |
@@ -307,13 +370,14 @@ class pMPOBuilder:
         if not self.df.size:
             raise AssertionError("Input pMPO DataFrame has no data")
         # Make sure the good_column exists
-        if not good_column in self.df.columns:
+        if good_column not in self.df.columns:
             raise AssertionError("{} does not exist in input pMPO DataFrame")
         self.min_samples = min_samples
         self.p_cutoff = p_cutoff
         self.q_cutoff = q_cutoff
         self.r2_cutoff = r2_cutoff
         self.pMPO_model_name = model_name
+        self.sigmoidal_correction = sigmoidal_correction
         self.pMPO = None
         # The good_column name parameter is the name of the column specifying whether molecules are good or bad in the
         # input dataset. We want to have a boolean column in Pandas, which is going to be self.good_column
@@ -365,16 +429,19 @@ class pMPOBuilder:
         # TODO: This is currently set up for sigmoidal functions only (as is the rest of the pMPO)
         # It could be extended to different functional forms
         if self.pMPO is None:
-            self.pMPO = pMPOModel(self.pMPO_model_name)
-            for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std']].iterrows():  # noqa
+            # Create the empty model
+            self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction)
+            # Populate the model
+            for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c']].iterrows():  # noqa
                 row_dict = row[1].to_dict()
                 # Rename the columns
                 row_dict['mean'] = row_dict.pop('good_mean')
                 row_dict['std'] = row_dict.pop('good_std')
                 row_dict['weight'] = row_dict.pop('w')
                 # Create the function
-                fn = SigmoidalFunction(**row_dict)
-                self.pMPO.register(row_dict['name'], fn)
+                gaussian = WeightedGaussianFunction(**row_dict)
+                sigmoidal = SigmoidalFunction(**row_dict)
+                self.pMPO.register(row_dict['name'], gaussian, sigmoidal)
             return self.pMPO
         else:
             return self.pMPO

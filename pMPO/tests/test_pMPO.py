@@ -735,7 +735,7 @@ class test_suite002_behavior(unittest.TestCase):
 
     def setUp(self):
         self.df = pd.read_pickle(REFERENCE_DATAFRAME)
-        self.builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO')
+        self.builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=False)
         self.model = self.builder.get_pMPO()
 
     def test003_intermediate_statistics(self):
