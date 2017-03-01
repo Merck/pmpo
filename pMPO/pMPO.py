@@ -138,7 +138,6 @@ def calculate_descriptor_statistics(df: pd.DataFrame, good_column: str, min_samp
     #                -1(x-<x>)
     #         1 + b c
     # We need to calculate the parameters of this function: b, c
-    # First using a gaussian form: a*numpy.exp(-(x-b)**2/(2*c**2)) to solve for the inflection point
     # Where: a = 1.0
     #        x = the calculated cutoff
     #        b = descriptor mean in good molecules (not the same b as the sigmodal function above)
@@ -221,15 +220,15 @@ class WeightedGaussianFunction(pMPOFunction):
         try:
             self.mean = float(kwargs['mean'])
         except ValueError:
-            raise KeyError("mean in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['mean']))
+            raise KeyError("mean parameter in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['mean']))  # noqa
         try:
             self.std = float(kwargs['std'])
         except ValueError:
-            raise KeyError("std in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['std']))
+            raise KeyError("std parameter in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['std']))  # noqa
         try:
             self.weight = float(kwargs['weight'])
         except ValueError:
-            raise KeyError("weight in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['weight']))
+            raise KeyError("weight parameter in Weighted Gaussian pMPOFunction cannot be cast to float".format(kwargs['weight']))  # noqa
 
     def __call__(self, val):
         return self.weight * np.exp(-1.0 * np.square(val - self.mean) / (2.0 * np.square(self.std)))
@@ -243,8 +242,8 @@ class SigmoidalFunction(pMPOFunction):
     A sigmoidal pMPO function
 
                   1
-    f(x) = -----------------
-                   -1(x - mean)
+    f(x) = -----------------------
+                   -1(x - cutoff)
             1 + b c
     """
     def __init__(self, **kwargs):
@@ -252,26 +251,26 @@ class SigmoidalFunction(pMPOFunction):
             raise KeyError("b not provided to sigmoidal pMPO function: {}".format(kwargs))
         if 'c' not in kwargs:
             raise KeyError("c not provided to sigmoidal pMPO function: {}".format(kwargs))
-        if 'mean' not in kwargs:
-            raise KeyError("mean not provided to sigmoidal pMPO function: {}".format(kwargs))
+        if 'cutoff' not in kwargs:
+            raise KeyError("cutoff not provided to sigmoidal pMPO function: {}".format(kwargs))
         try:
             self.b = float(kwargs['b'])
         except ValueError:
-            raise KeyError("b to sigmoidal pMPO function cannot be cast to float".format(kwargs['b']))
+            raise KeyError("b parameter in sigmoidal pMPO function cannot be cast to float".format(kwargs['b']))
         try:
             self.c = float(kwargs['c'])
         except ValueError:
-            raise KeyError("c to sigmoidal pMPO function cannot be cast to float".format(kwargs['c']))
+            raise KeyError("c parameter in sigmoidal pMPO function cannot be cast to float".format(kwargs['c']))
         try:
-            self.mean = float(kwargs['mean'])
+            self.cutoff = float(kwargs['cutoff'])
         except ValueError:
-            raise KeyError("mean to sigmoidal pMPO function cannot be cast to float".format(kwargs['mean']))
+            raise KeyError("cutoff parameter in sigmoidal pMPO function cannot be cast to float".format(kwargs['mean']))
 
     def __call__(self, val):
-        return np.power(1.0 + self.b * np.power(self.c, -1.0 * (val - self.mean)), -1.0)
+        return np.power(1.0 + self.b * np.power(self.c, -1.0 * (val - self.cutoff)), -1.0)
 
     def __str__(self):
-        return "np.power(1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})), -1.0)".format(self.b, self.c, self.mean)
+        return "np.power(1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})), -1.0)".format(self.b, self.c, self.cutoff)  # noqa
 
 
 class pMPOModel:
@@ -309,12 +308,11 @@ class pMPOModel:
         score = 0.0
         for key, val in kwargs.items():
             _key = key.upper() if self.case_insensitive else key
-            _score = 0.0
             if _key in self.gaussians and not np.isnan(val):
                 _score = self.gaussians[_key](val)
                 if self.sigmoidal_correction and _key in self.sigmoidals:
                     _score *= self.sigmoidals[_key](val)
-            score += _score
+                score += _score
         return score
 
     def register(self, name: str, gaussian: WeightedGaussianFunction, sigmoidal: SigmoidalFunction):
@@ -432,7 +430,7 @@ class pMPOBuilder:
             # Create the empty model
             self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction)
             # Populate the model
-            for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c']].iterrows():  # noqa
+            for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c', 'cutoff']].iterrows():  # noqa
                 row_dict = row[1].to_dict()
                 # Rename the columns
                 row_dict['mean'] = row_dict.pop('good_mean')
