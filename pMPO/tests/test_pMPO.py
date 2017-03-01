@@ -836,3 +836,12 @@ class test_suite002_behavior(unittest.TestCase):
         """
         with self.assertRaises(AssertionError):
             pMPOBuilder(self.df, good_column='I DO NOT EXIST', model_name='CNS pMPO')
+
+    def test013_case_sensitivity(self):
+        sensitive_builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', case_insensitive=False)
+        sensitive_model = sensitive_builder.get_pMPO()
+        props = ('TPSA', 'HBD', 'MW', 'cLogD_ACD_v15', 'mbpKa')
+        # Check that the props are case sensitive in the sensitive_model
+        for p in props:
+            self.assertIn(p, sensitive_model.gaussians)
+            self.assertIn(p, sensitive_model.sigmoidals)

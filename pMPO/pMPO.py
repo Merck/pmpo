@@ -346,7 +346,7 @@ class pMPOBuilder:
     """
     def __init__(self, df: pd.DataFrame, good_column: str, model_name: str, good_value='default',
                  pMPO_good_column_name: str=None, min_samples: int=10, p_cutoff: float=0.01, q_cutoff: float=0.05,
-                 r2_cutoff: float=0.53, sigmoidal_correction=True):
+                 r2_cutoff: float=0.53, sigmoidal_correction=True, case_insensitive=True):
         """
         Build a pMPO model
         :param df: Input DataFrame with good molecules, bad molecules, and data
@@ -359,6 +359,7 @@ class pMPOBuilder:
         :param q_cutoff: The q-value cutoff used in parameterizing the sigmoidal functions
         :param r2_cutoff: The r^2 cutoff for determining linearly correlated descriptors
         :param sigmoidal_correction: Use the sigmoidal correction to the weighted Gaussian scores
+        :param case_insensitive: Whether the models should be case insensitive to the descriptor keys
         """
         # -------------------------------------
         # | Set up the input Pandas DataFrame |
@@ -376,6 +377,7 @@ class pMPOBuilder:
         self.r2_cutoff = r2_cutoff
         self.pMPO_model_name = model_name
         self.sigmoidal_correction = sigmoidal_correction
+        self.case_insensitive = case_insensitive
         self.pMPO = None
         # The good_column name parameter is the name of the column specifying whether molecules are good or bad in the
         # input dataset. We want to have a boolean column in Pandas, which is going to be self.good_column
@@ -428,7 +430,8 @@ class pMPOBuilder:
         # It could be extended to different functional forms
         if self.pMPO is None:
             # Create the empty model
-            self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction)
+            self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction,
+                                  case_insensitive=self.case_insensitive)
             # Populate the model
             for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c', 'cutoff']].iterrows():  # noqa
                 row_dict = row[1].to_dict()
