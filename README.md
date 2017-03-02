@@ -81,7 +81,8 @@ np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2)) * np.power(1.0 + 0.15 * np.powe
 You can use your model on any dictionary of data with the expected tags. For example:
 
 ```python
-# A new observation wih data
+# Test the non-sigmoidal corrected CNS pMPO model
+# This drug was included in the input set
 # Data that is missing is given a score of 0.0 and irrelevant data is not used
 abacavir = {
     'TPSA': 101.88,
