@@ -167,7 +167,7 @@ You can load it back up again and use it right away.
 
 Apache License 2.0
 
-Copyright (c) 2017 Merck & Co, Inc.
+Copyright (c) 2017 Merck Sharp & Dohme Corp. a subsidiary of Merck & Co., Inc., Kenilworth, NJ, USA.
 
 Written by Scott Arne Johnson <scott.johnson6@merck.com>
 

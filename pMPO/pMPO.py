@@ -1,6 +1,7 @@
 # Apache License 2.0
 #
-# Copyright (c) 2017 Merck & Co, Inc.
+# Copyright (c) 2017 Merck Sharp & Dohme Corp. a subsidiary of Merck & Co., Inc., Kenilworth, NJ, USA.
+# Written by Scott Arne Johnson <scott.johnson6@merck.com>
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the LICENSE file
