@@ -1,4 +1,15 @@
-# Numpy License
+# License Summary
+
+BSD Licenses:
+
+- Numpy
+- Scipy
+- Pandas
+- Statsmodels
+
+# Licenses
+
+## Numpy License
 
 Copyright (c) 2005-2011, NumPy Developers.
 All rights reserved.
@@ -31,7 +42,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Scipy License
+## Scipy License
 
 Copyright (c) 2001, 2002 Enthought, Inc.
 All rights reserved.
@@ -64,7 +75,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
-# Pandas License
+## Pandas License
 
 pandas is distributed under a 3-clause ("Simplified" or "New") BSD
 license. Parts of NumPy, SciPy, numpydoc, bottleneck, which all have
@@ -105,7 +116,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## About the Copyright Holders
+### About the Copyright Holders
 
 
 AQR Capital Management began pandas development in 2008. Development was
@@ -120,7 +131,7 @@ http://github.com/pydata.
 
 Full credits for pandas contributors can be found in the documentation.
 
-## Our Copyright Policy
+### Our Copyright Policy
 
 
 PyData uses a shared copyright model. Each contributor maintains copyright
@@ -143,7 +154,7 @@ All rights reserved.
 Distributed under the terms of the BSD Simplified License.
 ```
 
-# Statsmodels License
+## Statsmodels License
 
 Copyright (C) 2006, Jonathan E. Taylor
 All rights reserved.
