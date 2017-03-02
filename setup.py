@@ -19,4 +19,7 @@ setup(
     description='Probabilistic MPO models',
     install_requires=['numpy', 'scipy', 'pandas', 'statsmodels'],
     test_suite='pMPO.tests',
+    classifiers=[
+        'License :: OSI Approved :: Apache Software License'
+    ]
 )
