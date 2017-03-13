@@ -10,9 +10,20 @@ and removal of linearly correlated descriptors.
 
 ## Author
 
-Scott Arne Johnson <scott.johnson6@merck.com>
+Scott Arne Johnson <scott.johnson6@merck.com>.
 
 Rewritten and tested against the original source code used in the paper by Hakan Gunaydin.
+
+## Installation
+
+Compatible only with Python 3.5+ (tested in Python versions 3.5.2 and 3.6.0). 
+Simply ``pip install setup.py`` and the module is usable.
+
+The tests can be run from the root directory of the source tree using ``python setup.py test``.
+
+Based on the recommendations [here](https://packaging.python.org/requirements/) the requirements in ``setup.py`` are
+version permissive but the ``requirements.txt`` file contain the exact version numbers used in building and testing. If
+tests fail with later versions of the dependencies, please specifically use the dependency versions in this file.
 
 ## Usage
 
@@ -21,8 +32,10 @@ to do that for molecules with the *oenotebook* package.
 
 ### Simple Usage
 
-This will show building a model with the pickled Pandas DataFrame ``pMPO/test/assets/CNS_MPO.df.pkl`` included in the 
-testing suite for this project. This is a DataFrame created from the data used in the original publication.
+This will demonstrate building the CNS (Central Nervous System) pMPO model published in Hakan's paper referenced above.
+Please refer to that paper for a technical discussion on the model. The model can be build from the pickled Pandas
+DataFrame provided in the testing directory: ``pMPO/test/assets/CNS_MPO.df.pkl``. This is a DataFrame created from the 
+data used in the original publication.
 
 **If you do not know how to build a DataFrame like this from molecule data, the a tutorial will be added in the near 
 future**
@@ -38,13 +51,14 @@ that further biases against bad compounds. The published CNS pMPO did not includ
 by the additional parameter ```sigmoidal_correction```, which is ```True``` by default.
 
 ```python
+from pMPO import pMPOBuilder
 builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=False)
 ```
 
 That's it! You've re-created the CNS pMPO. We can get a usable model from the following:
 
 ```python
-model = builder.get_pMPO()
+model = builder.model
 ```
 
 We can inspect the model by just printing it as a string ```print(model)```
@@ -64,7 +78,7 @@ If we wanted to build the same model using the default sigmoidal correction:
 
 ```python
 builder = pMPOBuilder(df, good_column='CNS', model_name='CNS pMPO with Correction')
-model_with_correction = builder.get_pMPO()
+model_with_correction = builder.model
 ```
 
 And inspecting this model shows additional terms:
@@ -105,7 +119,7 @@ print(score)
 You can get all the analytics to assess the model you just built.
 
 ```python
-stats = builder.get_pMPO_statistics()
+stats = builder.statistics
 ```
 
 This will return a Pandas DataFrame with the following columns (for each descriptor column, e.g. "TPSA"):
@@ -133,7 +147,7 @@ You can also ask for the NxN descriptor correlation matrix as a Pandas DataFrame
 for the linear correlations of each descriptor pair (square of Pearson's r).
 
 ```python
-stats = builder.get_descriptor_correlation()
+stats = builder.correlation
 ```
 
 ### Advanced Usage

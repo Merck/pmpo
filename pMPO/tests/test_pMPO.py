@@ -747,7 +747,7 @@ class test_suite001_building(unittest.TestCase):
         Make sure we can retrieve a model
         """
         builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=False)
-        model = builder.get_pMPO()
+        model = builder.model
         self.assertIsNotNone(model)
 
     def test003_sigmoidal_builder(self):
@@ -762,7 +762,7 @@ class test_suite001_building(unittest.TestCase):
         Make sure we can retrieve a model
         """
         builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=True)
-        model = builder.get_pMPO()
+        model = builder.model
         self.assertIsNotNone(model)
 
 class test_suite002_behavior(unittest.TestCase):
@@ -770,10 +770,10 @@ class test_suite002_behavior(unittest.TestCase):
     def setUp(self):
         self.df = pd.read_pickle(REFERENCE_DATAFRAME)
         self.builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', sigmoidal_correction=False)
-        self.model = self.builder.get_pMPO()
+        self.model = self.builder.model
         # Build with the sigmoidal correction
         self.sig_builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO SIG', sigmoidal_correction=True)
-        self.sig_model = self.sig_builder.get_pMPO()
+        self.sig_model = self.sig_builder.model
 
     def test005_sigmoidal_correction_flag(self):
         self.assertFalse(self.model.sigmoidal_correction)
@@ -798,7 +798,7 @@ class test_suite002_behavior(unittest.TestCase):
         """
         Check all the intermediate statistics are OK
         """
-        stats = self.builder.get_pMPO_statistics()
+        stats = self.builder.statistics
         # List of all stats to check for important statistic
         all_stats = ['p_value', 'good_mean', 'good_std', 'bad_mean', 'bad_std', 'good_nsamples', 'bad_nsamples',
                      'cutoff', 'b', 'c', 'z', 'w']
@@ -861,7 +861,7 @@ class test_suite002_behavior(unittest.TestCase):
 
     def test013_case_sensitivity(self):
         sensitive_builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', case_insensitive=False)
-        sensitive_model = sensitive_builder.get_pMPO()
+        sensitive_model = sensitive_builder.model
         props = ('TPSA', 'HBD', 'MW', 'cLogD_ACD_v15', 'mbpKa')
         # Check that the props are case sensitive in the sensitive_model
         for p in props:

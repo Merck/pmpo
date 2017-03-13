@@ -408,28 +408,31 @@ class pMPOBuilder:
         # Add descriptor weights to the self.descriptor_stats DataFrame
         calculate_descriptor_weights(self.decriptor_stats)
 
-    def get_pMPO_statistics(self) -> pd.DataFrame:
+    @property
+    def statistics(self) -> pd.DataFrame:
         """
         Get the pMPO statistics calculated on all the descriptors
         :return: A DataFrame with the pMPO model statistics
         """
         return self.decriptor_stats
 
-    def get_descriptor_correlation(self) -> pd.DataFrame:
+    @property
+    def correlation(self) -> pd.DataFrame:
         """
         Get the correlation matrix for all input descriptors
         :return: A DataFrame with a NxN correlation matrix
         """
         return self.descriptor_corr
 
-    def get_pMPO(self):
+    @property
+    def model(self) -> pMPOModel:
         """
         Return a simple pMPO model that can be reused for scoring
-        :return:
+        :return: A usable pMPO model
         """
         # TODO: This is currently set up for sigmoidal functions only (as is the rest of the pMPO)
         # It could be extended to different functional forms
-        if self.pMPO is None:
+        if not self.pMPO:
             # Create the empty model
             self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction,
                                   case_insensitive=self.case_insensitive)
