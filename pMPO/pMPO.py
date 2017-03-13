@@ -34,7 +34,7 @@ from collections import OrderedDict
 ########################################################################################################################
 
 
-def build_evaluator(good_value='default'):
+def create_boolean_evaluator(good_value=None):
     """
     Build an evaluator to determine TRUE values in a DataFrame column
     :param good_value: Value of TRUE rows ['default': is an assortment of common words and values that evaluate to TRUE]
@@ -45,7 +45,7 @@ def build_evaluator(good_value='default'):
                       'active', 'Active', 'ACTIVE', 'a', 'A',
                       'yes', 'Yes', 'YES', 'y', 'Y',
                       '1', 1, True}
-    if good_value == 'default':
+    if good_value in (None or 'default'):
         return lambda x: x in DEFAULT_TRUTHS
     else:
         return lambda x: x == good_value
@@ -158,9 +158,10 @@ def calculate_descriptor_statistics(df: pd.DataFrame, good_column: str, min_samp
 
 def pick_uncorrelated_columns(df: pd.DataFrame, column_stats: pd.DataFrame, r2_cutoff=0.53, resort=False) -> pd.DataFrame:  # noqa
     """
-    Calculate the descriptor r^2 correlation matrix and select uncorrelated descriptors by p-value
+    Calculate the descriptor r^2 correlation matrix and select uncorrelated descriptors by p-value then calculate
+    the weights for the remaining uncorrelated descriptors
     :param df: The main Pandas DataFrame
-    :param column_stats: The Pandas DataFrame with the column summary statistics
+    :param column_stats: The Pandas DataFrame with the column summary statistics [NOTE: IS MODIFIED]
     :param r2_cutoff: Threshold R^2 that defines correlated descriptors
     :param resort: Whether to resort the column statistics
     :return: Tuple of the descriptor corelation matrix and selected descriptors
@@ -179,12 +180,11 @@ def pick_uncorrelated_columns(df: pd.DataFrame, column_stats: pd.DataFrame, r2_c
             selected_descriptors.add(this_desc)
     # Annotate selected descriptors
     column_stats['selected'] = column_stats['significant'] & column_stats['name'].isin(selected_descriptors)
+    # Compute the weights
+    z_sum = column_stats[(column_stats['selected'] == True)].z.sum()
+    column_stats['w'] = np.where(column_stats['selected'] == True, column_stats['z'] / z_sum, np.nan)
+    # Return the corelation matirx
     return desc_correlation
-
-
-def calculate_descriptor_weights(df):
-    z_sum = df[(df['selected'] == True)].z.sum()
-    df['w'] = np.where(df['selected'] == True, df['z'] / z_sum, np.nan)
 
 ########################################################################################################################
 # More convenient classes for model building
@@ -406,26 +406,25 @@ class pMPOBuilder:
         else:
             self.good_column = pMPO_good_column_name
         # Create the evaluator that evaluates whether an individual value in the input good_column is True
-        good_value_evaluator = build_evaluator(good_value)
+        good_value_evaluator = create_boolean_evaluator(good_value)
         # Apply the evaluator to the input good_column and store it in the renamed self.good_column
         self.df[self.good_column] = np.vectorize(good_value_evaluator)(self.df[good_column])
         # ---------------------------
         # | Do the pMPO calculation |
         # ---------------------------
         # Calculate the ability of each descriptor to separate good from bad
-        self.decriptor_stats = calculate_descriptor_statistics(self.df,
-                                                               good_column=self.good_column,
-                                                               min_samples=self.min_samples,
-                                                               p_cutoff=self.p_cutoff,
-                                                               q_cutoff=self.q_cutoff)
+        self.descriptor_stats = calculate_descriptor_statistics(self.df,
+                                                                good_column=self.good_column,
+                                                                min_samples=self.min_samples,
+                                                                p_cutoff=self.p_cutoff,
+                                                                q_cutoff=self.q_cutoff)
         # Calculate correlated descriptors
         # Note: Adds the critical "selected" column to self.descriptor_stats used to compute the weighting
         self.descriptor_corr = pick_uncorrelated_columns(self.df,
-                                                         self.decriptor_stats,
+                                                         self.descriptor_stats,
                                                          r2_cutoff=self.r2_cutoff,
                                                          resort=False)
-        # Add descriptor weights to the self.descriptor_stats DataFrame
-        calculate_descriptor_weights(self.decriptor_stats)
+
 
     @property
     def statistics(self) -> pd.DataFrame:
@@ -433,7 +432,7 @@ class pMPOBuilder:
         Get the pMPO statistics calculated on all the descriptors
         :return: A DataFrame with the pMPO model statistics
         """
-        return self.decriptor_stats
+        return self.descriptor_stats
 
     @property
     def correlation(self) -> pd.DataFrame:
@@ -456,7 +455,7 @@ class pMPOBuilder:
             self.pMPO = pMPOModel(self.pMPO_model_name, sigmoidal_correction=self.sigmoidal_correction,
                                   case_insensitive=self.case_insensitive)
             # Populate the model
-            for row in self.decriptor_stats[(self.decriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c', 'cutoff']].iterrows():  # noqa
+            for row in self.descriptor_stats[(self.descriptor_stats['selected'] == True)][['name', 'w', 'good_mean', 'good_std', 'b', 'c', 'cutoff']].iterrows():  # noqa
                 row_dict = row[1].to_dict()
                 # Rename the columns
                 row_dict['mean'] = row_dict.pop('good_mean')
