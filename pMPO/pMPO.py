@@ -70,10 +70,7 @@ def cutoff_fn(good_mean: float, good_std: float, bad_mean: float, bad_std: float
     :param bad_std: Standard deviation of the bad samples
     :return: The cutoff value
     """
-    if good_mean < bad_mean:
-        return ((bad_mean - good_mean) / (good_std + bad_std)) * good_std + good_mean
-    else:
-        return ((good_mean - bad_mean) / (good_std + bad_std)) * bad_std + bad_mean
+    return (abs(bad_mean - good_mean) / (good_std + bad_std)) * good_std + good_mean
 
 
 def calculate_descriptor_statistics(df: pd.DataFrame, good_column: str, min_samples=10, p_cutoff=0.01,
@@ -212,12 +209,15 @@ class WeightedGaussianFunction(pMPOFunction):
     f(x) = w* e
     """
     def __init__(self, **kwargs):
+        if 'name' not in kwargs:
+            raise KeyError('name not provided to weighted Gaussian pMPO function')
         if 'mean' not in kwargs:
             raise KeyError("mean not provided to weighted Gaussian pMPO function: {}".format(kwargs))
         if 'weight' not in kwargs:
             raise KeyError("weight not provided to weighted Gaussian pMPO function: {}".format(kwargs))
         if 'std' not in kwargs:
             raise KeyError("std not provided to weighted Gaussian pMPO function: {}".format(kwargs))
+        self.name = kwargs['name']
         try:
             self.mean = float(kwargs['mean'])
         except ValueError:
@@ -235,7 +235,8 @@ class WeightedGaussianFunction(pMPOFunction):
         return self.weight * np.exp(-1.0 * np.square(val - self.mean) / (2.0 * np.square(self.std)))
 
     def __str__(self):
-        return "{:.2f} * np.exp(-1.0 * (x - {:.2f})^2 / (2.0 * ({:.2f})^2))".format(self.weight, self.mean, self.std)
+        return "{0:.2f} * np.exp(-1.0 * ([{1}] - {2:.2f})^2 / (2.0 * ({3:.2f})^2))".format(
+            self.weight, self.name, self.mean, self.std)
 
 
 class SigmoidalFunction(pMPOFunction):
@@ -248,12 +249,15 @@ class SigmoidalFunction(pMPOFunction):
             1 + b c
     """
     def __init__(self, **kwargs):
+        if 'name' not in kwargs:
+            raise KeyError('name not provided to sigmoidal pMPO function')
         if 'b' not in kwargs:
             raise KeyError("b not provided to sigmoidal pMPO function: {}".format(kwargs))
         if 'c' not in kwargs:
             raise KeyError("c not provided to sigmoidal pMPO function: {}".format(kwargs))
         if 'cutoff' not in kwargs:
             raise KeyError("cutoff not provided to sigmoidal pMPO function: {}".format(kwargs))
+        self.name = kwargs['name']
         try:
             self.b = float(kwargs['b'])
         except ValueError:
@@ -271,7 +275,8 @@ class SigmoidalFunction(pMPOFunction):
         return np.power(1.0 + self.b * np.power(self.c, -1.0 * (val - self.cutoff)), -1.0)
 
     def __str__(self):
-        return "np.power(1.0 + {:.2f} * np.power({:.2f}, -1.0 * (x - {:.2f})), -1.0)".format(self.b, self.c, self.cutoff)  # noqa
+        return "np.power(1.0 + {0:.2f} * np.power({1:.2f}, -1.0 * ([{2}] - {3:.2f})), -1.0)".format(
+            self.b, self.c, self.name, self.cutoff)
 
 
 class pMPOModel:
@@ -290,13 +295,6 @@ class pMPOModel:
         self.sigmoidal_correction = sigmoidal_correction
         self.gaussians = {}
         self.sigmoidals = {}
-
-    def set_sigmoidal_correction(self, use_corr=True):
-        """
-        Set the flag to use the sigmoidal correction
-        :param use_corr: Whether to use the sigmoidal corrections
-        """
-        self.sigmoidal_correction = use_corr
 
     def __call__(self, **kwargs) -> float:
         """
@@ -333,12 +331,14 @@ class pMPOModel:
         :return: The string representation of the model
         """
         submodels = []
+        # Do a Schwartzian transform sort
         for name, fn in self.gaussians.items():
-            _fn_text = "[{}] {}".format(name, str(fn))
+            _fn_info = (name, str(fn))
             if self.sigmoidal_correction and name in self.sigmoidals:
-                _fn_text += " * {}".format(str(self.sigmoidals[name]))
-            submodels.append(_fn_text)
-        return "{}: {}".format(self.name, " + ".join(sorted(submodels)))
+                _fn_info[1] += " * {}".format(str(self.sigmoidals[name]))
+            submodels.append(_fn_info)
+        submodels.sort(key=lambda x: x[0])
+        return "{}: {}".format(self.name, " + ".join([f[1] for f in submodels]))
 
 
 class pMPOBuilder:
