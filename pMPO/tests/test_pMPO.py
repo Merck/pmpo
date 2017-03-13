@@ -860,6 +860,9 @@ class test_suite002_behavior(unittest.TestCase):
             pMPOBuilder(self.df, good_column='I DO NOT EXIST', model_name='CNS pMPO')
 
     def test013_case_sensitivity(self):
+        """
+        Test case densitivity in a model
+        """
         sensitive_builder = pMPOBuilder(self.df, good_column='CNS', model_name='CNS pMPO', case_insensitive=False)
         sensitive_model = sensitive_builder.model
         props = ('TPSA', 'HBD', 'MW', 'cLogD_ACD_v15', 'mbpKa')
@@ -867,3 +870,11 @@ class test_suite002_behavior(unittest.TestCase):
         for p in props:
             self.assertIn(p, sensitive_model.gaussians)
             self.assertIn(p, sensitive_model.sigmoidals)
+
+    def test014_descriptors_and_equations_properties(self):
+        """
+        Test consistency between the self.descriptors and self.equations properties
+        """
+        equations = self.model.equations
+        for descriptor in self.model.descriptors:
+            self.assertIn(descriptor, equations)

@@ -20,10 +20,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import typing
 import numpy as np
 import pandas as pd
 from scipy import stats
 from abc import ABCMeta
+from collections import OrderedDict
 
 ########################################################################################################################
 # The following functions wrap the functionality described in:
@@ -296,6 +298,30 @@ class pMPOModel:
         self.gaussians = {}
         self.sigmoidals = {}
 
+    @property
+    def descriptors(self) -> typing.List[str]:
+        """
+        Return all the important descriptors
+        :return: An alphabetically sorted list of the important descriptors
+        """
+        return sorted(self.gaussians.keys())
+
+    @property
+    def equations(self) -> typing.Dict[str, str]:
+        """
+        Return an ordered dictionary of all the equations and the associated descriptor
+        :return: An ordered dictionary of all the equations with the associated descriptor as the key
+        """
+        submodels = []
+        # Do a Schwartzian transform sort
+        for name, fn in self.gaussians.items():
+            _fn_info = (name, str(fn))
+            if self.sigmoidal_correction and name in self.sigmoidals:
+                _fn_info[1] += " * {}".format(str(self.sigmoidals[name]))
+            submodels.append(_fn_info)
+        submodels.sort(key=lambda x: x[0])
+        return OrderedDict(submodels)
+
     def __call__(self, **kwargs) -> float:
         """
         Apply a pMPO model
@@ -330,15 +356,8 @@ class pMPOModel:
         Stringify the model by creating an equation that represents the pMPO
         :return: The string representation of the model
         """
-        submodels = []
-        # Do a Schwartzian transform sort
-        for name, fn in self.gaussians.items():
-            _fn_info = (name, str(fn))
-            if self.sigmoidal_correction and name in self.sigmoidals:
-                _fn_info[1] += " * {}".format(str(self.sigmoidals[name]))
-            submodels.append(_fn_info)
-        submodels.sort(key=lambda x: x[0])
-        return "{}: {}".format(self.name, " + ".join([f[1] for f in submodels]))
+        submodels = self.equations
+        return "{}: {}".format(self.name, " + ".join(submodels.values()))
 
 
 class pMPOBuilder:
