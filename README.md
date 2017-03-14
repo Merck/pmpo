@@ -17,7 +17,7 @@ Rewritten and tested against the original source code used in the paper by Hakan
 ## Installation
 
 Compatible only with Python 3.5+ (tested in Python versions 3.5.2 and 3.6.0). 
-Simply ``pip install setup.py`` and the module is usable.
+Simply ``pip install .`` and the module is usable.
 
 The tests can be run from the root directory of the source tree using ``python setup.py test``.
 
