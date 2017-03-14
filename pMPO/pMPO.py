@@ -321,7 +321,7 @@ class pMPOModel:
         submodels = []
         # Do a Schwartzian transform sort
         for name, fn in self.gaussians.items():
-            _fn_info = (name, str(fn))
+            _fn_info = [name, str(fn)]
             if self.sigmoidal_correction and name in self.sigmoidals:
                 _fn_info[1] += " * {}".format(str(self.sigmoidals[name]))
             submodels.append(_fn_info)

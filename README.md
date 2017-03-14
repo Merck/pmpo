@@ -61,12 +61,15 @@ That's it! You've re-created the CNS pMPO. We can get a usable model from the fo
 model = builder.model
 ```
 
-We can inspect the model by just printing it as a string ```print(model)```
+We can inspect the model by just printing it as a string ```print(model)``` (with a bit of pretty printing here):
 
 ```text
-CNS pMPO: [CLOGD_ACD_V15] 0.13 * np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2)) + [HBD] 0.27 * np.exp(-1.0 * 
-(x - 1.09)^2 / (2.0 * (0.89)^2)) + [MBPKA] 0.12 * np.exp(-1.0 * (x - 8.07)^2 / (2.0 * (2.21)^2)) + [MW] 0.16 * 
-np.exp(-1.0 * (x - 304.70)^2 / (2.0 * (94.05)^2)) + [TPSA] 0.33 * np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2))
+CNS pMPO: 0.13 * np.exp(-1.0 * ([cLogD_ACD_v15] - 1.81)^2 / (2.0 * (1.93)^2)) + 
+          0.27 * np.exp(-1.0 * ([HBD]           - 1.09)^2 / (2.0 * (0.89)^2)) + 
+          0.12 * np.exp(-1.0 * ([mbpKa]         - 8.07)^2 / (2.0 * (2.21)^2)) + 
+          0.16 * np.exp(-1.0 * ([MW]            - 304.70)^2 / (2.0 * (94.05)^2)) + 
+          0.33 * np.exp(-1.0 * ([TPSA]          - 50.70)^2 / (2.0 * (28.30)^2))
+
 ```
 
 You can see how it has the name of the model ("CNS pMPO") followed by all the relevant data that would be expected on
@@ -84,12 +87,16 @@ model_with_correction = builder.model
 And inspecting this model shows additional terms:
 
 ```text
-CNS pMPO with Correction: [CLOGD_ACD_V15] 0.13 * np.exp(-1.0 * (x - 1.81)^2 / (2.0 * (1.93)^2)) * np.power(1.0 + 0.02 * 
-np.power(131996.99, -1.0 * (x - 1.81)), -1.0) + [HBD] 0.27 * np.exp(-1.0 * (x - 1.09)^2 / (2.0 * (0.89)^2)) * 
-np.power(1.0 + 0.09 * np.power(0.00, -1.0 * (x - 1.09)), -1.0) + [MBPKA] 0.12 * np.exp(-1.0 * (x - 8.07)^2 / (2.0 * 
-(2.21)^2)) * np.power(1.0 + 0.02 * np.power(1459310.78, -1.0 * (x - 8.07)), -1.0) + [MW] 0.16 * np.exp(-1.0 * 
-(x - 304.70)^2 / (2.0 * (94.05)^2)) * np.power(1.0 + 0.03 * np.power(0.83, -1.0 * (x - 304.70)), -1.0) + [TPSA] 0.33 * 
-np.exp(-1.0 * (x - 50.70)^2 / (2.0 * (28.30)^2)) * np.power(1.0 + 0.15 * np.power(0.79, -1.0 * (x - 50.70)), -1.0)
+CNS pMPO with Correction: 0.13 * np.exp(-1.0 * ([cLogD_ACD_v15] - 1.81)^2 / (2.0 * (1.93)^2)) * 
+                          np.power(1.0 + 0.02 * np.power(131996.99, -1.0 * ([cLogD_ACD_v15] - 1.42)), -1.0) + 
+                          0.27 * np.exp(-1.0 * ([HBD] - 1.09)^2 / (2.0 * (0.89)^2)) * 
+                          np.power(1.0 + 0.09 * np.power(0.00, -1.0 * ([HBD] - 1.46)), -1.0) + 
+                          0.12 * np.exp(-1.0 * ([mbpKa] - 8.07)^2 / (2.0 * (2.21)^2)) * 
+                          np.power(1.0 + 0.02 * np.power(1459310.78, -1.0 * ([mbpKa] - 7.66)), -1.0) + 
+                          0.16 * np.exp(-1.0 * ([MW] - 304.70)^2 / (2.0 * (94.05)^2)) * 
+                          np.power(1.0 + 0.03 * np.power(0.83, -1.0 * ([MW] - 328.30)), -1.0) + 
+                          0.33 * np.exp(-1.0 * ([TPSA] - 50.70)^2 / (2.0 * (28.30)^2)) * 
+                          np.power(1.0 + 0.15 * np.power(0.79, -1.0 * ([TPSA] - 65.74)), -1.0)
 ```
 
 You can use your model on any dictionary of data with the expected tags. For example:
