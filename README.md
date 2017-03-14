@@ -187,6 +187,7 @@ You can load it back up again and use it right away.
 
 ## License
 
+```text
 Apache License 2.0
 
 Copyright (c) 2017 Merck Sharp & Dohme Corp. a subsidiary of Merck & Co., Inc., Kenilworth, NJ, USA.
@@ -209,3 +210,4 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+```
