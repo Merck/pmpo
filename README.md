@@ -10,7 +10,7 @@ and removal of linearly correlated descriptors.
 
 ## Author
 
-Scott Arne Johnson <scott.johnson6@merck.com>.
+Scott Arne Johnson (scott.johnson6@merck.com).
 
 Rewritten and tested against the original source code used in the paper by Hakan Gunaydin.
 
