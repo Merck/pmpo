@@ -2,7 +2,7 @@
 
 An implementation of the pMPO method described in:
 
-**Hakan Gunaydin**. Probabilistic Approach to Generating MPOs and Its Application as a Scoring Function for CNS Drugs.
+Hakan Gunaydin. Probabilistic Approach to Generating MPOs and Its Application as a Scoring Function for CNS Drugs.
 ACS Med Chem Lett 7, 89-93 (2016)
 
 Used to create MPO models with high levels of discrimination between good and bad samples using an independent t-test
