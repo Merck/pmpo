@@ -240,6 +240,9 @@ class WeightedGaussianFunction(pMPOFunction):
         return "{0:.2f} * np.exp(-1.0 * ([{1}] - {2:.2f})^2 / (2.0 * ({3:.2f})^2))".format(
             self.weight, self.name, self.mean, self.std)
 
+    def __repr__(self):
+        return str(self)
+
 
 class SigmoidalFunction(pMPOFunction):
     """
@@ -279,6 +282,9 @@ class SigmoidalFunction(pMPOFunction):
     def __str__(self):
         return "np.power(1.0 + {0:.2f} * np.power({1:.2f}, -1.0 * ([{2}] - {3:.2f})), -1.0)".format(
             self.b, self.c, self.name, self.cutoff)
+
+    def __repr__(self):
+        return str(self)
 
 
 class pMPOModel:
@@ -358,6 +364,9 @@ class pMPOModel:
         """
         submodels = self.equations
         return "{}: {}".format(self.name, " + ".join(submodels.values()))
+
+    def __repr__(self):
+        return str(self)
 
 
 class pMPOBuilder:

@@ -42,7 +42,7 @@ future**
 
 ```text
 import pandas as pd
-df = pd.read_pickle('pMPO/tests/assets/CNS_MPO.df.pkl')
+df = pd.read_pickle('pMPO/tests/assets/CNS_pMPO.df.pkl')
 ```
 
 Once you've created your Pandas DataFrame with your molecule data. You can use the ``pMPOBuilder`` class to create your 
